@@ -1,23 +1,22 @@
-import { Sequelize } from 'sequelize';
 import dotenv from 'dotenv';
+import odbc from 'odbc';
 
 dotenv.config();
 
-const sequelize = new Sequelize(
-  process.env.DB_NAME!,
-  process.env.DB_USER!,
-  process.env.DB_PASSWORD!,
-  {
-    host: process.env.DB_HOST,
-    port: parseInt(process.env.DB_PORT!, 1433), // Agregar el puerto aquí
-    dialect: 'mssql',
-    dialectOptions: {
-      options: {
-        encrypt: true,
-        trustServerCertificate: true, // Change to false for production
-      }
-    },
-  }
-);
+const dsnName = process.env.dsnName;
+const uid = process.env.dsnUser;
+const pwd = process.env.dsnPass;
 
-export default sequelize;
+export async function connectToDatabase() {
+  try {
+    // Conectar utilizando el DSN, usuario y contraseña
+    const connection = await odbc.connect(`DSN=${dsnName};UID=${uid};PWD=${pwd}`);
+    
+    console.log('Conexión exitosa al DSN:', dsnName);
+    return connection;
+  } catch (error) {
+    console.error('Error al conectar al DSN:', error);
+    throw error;
+  }
+}
+

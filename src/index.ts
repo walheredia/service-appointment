@@ -1,11 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
-//import sequelize from './config/database';
-import odbc from 'odbc';
-const dsnName = 'dsnEventos';
-const uid = 'juan';
-const pwd = '5871';
-
+import { connectToDatabase } from './config/database';
 dotenv.config();
 
 const app = express();
@@ -17,13 +12,9 @@ app.get('/', (req, res) => {
 
 async function main() {
   try {
-    // Conectar utilizando el DSN, usuario y contraseña
-    const connection = await odbc.connect(`DSN=${dsnName};UID=${uid};PWD=${pwd}`);
+    const connection = await connectToDatabase();
+
     
-    console.log('Conexión exitosa al DSN:', dsnName);
-
-    // Realiza operaciones en la base de datos utilizando la conexión
-
     // Cierra la conexión
     await connection.close();
   } catch (error) {
