@@ -6,8 +6,12 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 
+app.get('/health', (req, res) => {
+  res.json("api is alive")
+});
+
 app.get('/', (req, res) => {
-  res.send('Hello World!');
+  res.json("api is alive")
 });
 
 async function main() {
