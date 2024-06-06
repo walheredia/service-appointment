@@ -8,7 +8,7 @@ const dsnName = process.env.dsnName;
 const uid = process.env.dsnUser;
 const pwd = process.env.dsnPass;
 let connection: odbc.Connection;
-/*
+
 export async function connectToDatabase() {
   try {
     // Conectar utilizando el DSN, usuario y contraseña
@@ -29,17 +29,18 @@ export function getDatabaseConnection(): odbc.Connection {
 
   return connection;
 }
-*/
+
+/*
 const sequelize = new Sequelize({
   dialect: 'mssql', // Asumiendo que estás usando SQL Server
   dialectOptions: {
     options: {
       encrypt: true
     },
-    driver: 'ODBC Driver 17 for SQL Server',
+    //driver: 'ODBC Driver 17 for SQL Server',
     connectionString: `DSN=${dsnName};UID=${uid};PWD=${pwd}`
   },
   logging: false // Desactivar logging de Sequelize
 });
 
-export default sequelize;
+export default sequelize;*/
