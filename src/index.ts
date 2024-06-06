@@ -1,6 +1,6 @@
 import app from './app';
 import dotenv from 'dotenv';
-import sequelize from './config/database';
+import { connectToDatabase } from './config/database';
 
 dotenv.config();
 
@@ -8,12 +8,11 @@ const port = process.env.PORT || 3000;
 
 async function main() {
   try {
-    const connection = sequelize.authenticate();
-    //await sequelize.authenticate();
+    const connection = await connectToDatabase();
+
     
     // Cierra la conexión 
-    //await sequelize.close();
-    //await connection.close();
+    await connection.close();
   } catch (error) {
     console.error('Error al conectar al DSN:', error);
   }

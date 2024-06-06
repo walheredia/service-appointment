@@ -1,5 +1,5 @@
-import { DataTypes, Model, Optional } from 'sequelize';
-import sequelize from '../config/database';
+import odbc from 'odbc';
+import { getDatabaseConnection } from '../config/database';
 
 interface UsuariosExternosAttributes {
   Id: number;
@@ -11,60 +11,57 @@ interface UsuariosExternosAttributes {
   DeletedAt?: Date;
 }
 
-interface UsuariosExternosCreationAttributes extends Optional<UsuariosExternosAttributes, 'Id' | 'CreatedAt' | 'UpdatedAt'> {}
-
-class UsuariosExternos extends Model<UsuariosExternosAttributes, UsuariosExternosCreationAttributes> implements UsuariosExternosAttributes {
-  public Id!: number;
-  public Username!: string;
-  public EMail?: string;
-  public PasswordHash?: string;
-  public CreatedAt!: Date;
-  public UpdatedAt!: Date;
-  public DeletedAt?: Date;
-}
-
-//const dbConnection = getDatabaseConnection();
-
-UsuariosExternos.init({
-  Id: {
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
-    primaryKey: true,
-    allowNull: false
-  },
-  Username: {
-    type: DataTypes.STRING(30),
-    allowNull: false
-  },
-  EMail: {
-    type: DataTypes.STRING(50),
-    allowNull: true
-  },
-  PasswordHash: {
-    type: DataTypes.STRING(50),
-    allowNull: true
-  },
-  CreatedAt: {
-    type: DataTypes.DATE,
-    allowNull: false,
-    defaultValue: DataTypes.NOW
-  },
-  UpdatedAt: {
-    type: DataTypes.DATE,
-    allowNull: false,
-    defaultValue: DataTypes.NOW
-  },
-  DeletedAt: {
-    type: DataTypes.DATE,
-    allowNull: true
+export default class UsuariosExternos {
+  
+  static async findAll(): Promise<UsuariosExternosAttributes[]> {
+    const connection = getDatabaseConnection();
+    const result = await connection.query('SELECT * FROM UsuariosExternos');
+    return result.map((row: any) => ({
+      Id: row.Id,
+      Username: row.Username,
+      EMail: row.EMail,
+      PasswordHash: row.PasswordHash,
+      CreatedAt: new Date(row.CreatedAt),
+      UpdatedAt: new Date(row.UpdatedAt),
+      DeletedAt: row.DeletedAt ? new Date(row.DeletedAt) : undefined,
+    }));
   }
-}, {
-  sequelize,
-  tableName: 'UsuariosExternos',
-  timestamps: false,
-  createdAt: 'CreatedAt',
-  updatedAt: 'UpdatedAt',
-  deletedAt: 'DeletedAt'
-});
+  /*
+  static async findById(id: number): Promise<UsuariosExternosAttributes | null> {
+    const connection = getDatabaseConnection();
+    const result = await connection.query(`SELECT * FROM UsuariosExternos WHERE Id = ${id}`);
+    if (result.length === 0) return null;
+    const row = result[0];
+    return {
+      Id: row.Id,
+      Username: row.Username,
+      EMail: row.EMail,
+      PasswordHash: row.PasswordHash,
+      CreatedAt: new Date(row.CreatedAt),
+      UpdatedAt: new Date(row.UpdatedAt),
+      DeletedAt: row.DeletedAt ? new Date(row.DeletedAt) : null,
+    };
+  }
+*/
+  static async create(user: Omit<UsuariosExternosAttributes, 'Id' | 'CreatedAt' | 'UpdatedAt'>): Promise<void> {
+    const connection = getDatabaseConnection();
+    const sql = `
+      INSERT INTO UsuariosExternos (Username, EMail, PasswordHash, CreatedAt, UpdatedAt)
+      VALUES ('${user.Username}', '${user.EMail}', '${user.PasswordHash}', GETDATE(), GETDATE())
+    `;
+    await connection.query(sql);
+  }
 
-export default UsuariosExternos;
+  static async update(id: number, user: Partial<Omit<UsuariosExternosAttributes, 'Id' | 'CreatedAt' | 'UpdatedAt'>>): Promise<void> {
+    const connection = getDatabaseConnection();
+    const updates = Object.entries(user).map(([key, value]) => `${key} = '${value}'`).join(', ');
+    const sql = `UPDATE UsuariosExternos SET ${updates}, UpdatedAt = GETDATE() WHERE Id = ${id}`;
+    await connection.query(sql);
+  }
+
+  static async delete(id: number): Promise<void> {
+    const connection = getDatabaseConnection();
+    const sql = `UPDATE UsuariosExternos SET DeletedAt = GETDATE() WHERE Id = ${id}`;
+    await connection.query(sql);
+  }
+}

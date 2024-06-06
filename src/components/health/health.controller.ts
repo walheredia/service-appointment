@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
+import UsuariosExternos from '../../models/UsuariosExternos';
 
-const health = (req: Request, res: Response) => {
+const health = async(req: Request, res: Response) => {
+  const usuarios = await UsuariosExternos.findAll();
   res.status(200).json({"data": "API is alive"});
 };
 
