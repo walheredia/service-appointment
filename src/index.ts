@@ -1,6 +1,6 @@
 import app from './app';
 import dotenv from 'dotenv';
-import { connectToDatabase } from './config/database';
+import { connectToGeneralDatabase, connectToServicesDatabase } from './config/database';
 
 dotenv.config();
 
@@ -8,11 +8,12 @@ const port = process.env.PORT || 3000;
 
 async function main() {
   try {
-    const connection = await connectToDatabase();
-
+    const generalConnection = await connectToGeneralDatabase();
+    const servicesConnection = await connectToServicesDatabase();
     
-    // Cierra la conexión 
-    //await connection.close();
+    // Close db connection
+    //await generalConnection.close();
+    //await servicesConnection.close();
   } catch (error) {
     console.error('Error al conectar al DSN:', error);
   }

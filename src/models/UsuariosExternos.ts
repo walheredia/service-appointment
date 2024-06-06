@@ -1,5 +1,5 @@
 import odbc from 'odbc';
-import { getDatabaseConnection } from '../config/database';
+import { getGeneralDatabaseConnection } from '../config/database';
 
 interface UsuariosExternosAttributes {
   Id: number;
@@ -12,10 +12,10 @@ interface UsuariosExternosAttributes {
 }
 
 export default class UsuariosExternos {
-  
-  static async findAll(): Promise<UsuariosExternosAttributes[]> {
-    const connection = getDatabaseConnection();
-    const result = await connection.query('SELECT * FROM UsuariosExternos');
+
+  static async findAllUsers(): Promise<UsuariosExternosAttributes[]> {
+    const generalConnection = getGeneralDatabaseConnection();
+    const result = await generalConnection.query('SELECT * FROM UsuariosExternos');
     return result.map((row: any) => ({
       Id: row.Id,
       Username: row.Username,
@@ -26,10 +26,10 @@ export default class UsuariosExternos {
       DeletedAt: row.DeletedAt ? new Date(row.DeletedAt) : undefined,
     }));
   }
-  /*
-  static async findById(id: number): Promise<UsuariosExternosAttributes | null> {
-    const connection = getDatabaseConnection();
-    const result = await connection.query(`SELECT * FROM UsuariosExternos WHERE Id = ${id}`);
+  
+  static async findUserByUserName(username: string): Promise<UsuariosExternosAttributes | null> {
+    const generalConnection = getGeneralDatabaseConnection();
+    const result = await generalConnection.query(`SELECT * FROM UsuariosExternos WHERE Username = ${username} and DeletedAt is null`) as UsuariosExternosAttributes[];
     if (result.length === 0) return null;
     const row = result[0];
     return {
@@ -39,29 +39,29 @@ export default class UsuariosExternos {
       PasswordHash: row.PasswordHash,
       CreatedAt: new Date(row.CreatedAt),
       UpdatedAt: new Date(row.UpdatedAt),
-      DeletedAt: row.DeletedAt ? new Date(row.DeletedAt) : null,
+      DeletedAt: row.DeletedAt ? new Date(row.DeletedAt) : undefined,
     };
   }
-*/
+
   static async create(user: Omit<UsuariosExternosAttributes, 'Id' | 'CreatedAt' | 'UpdatedAt'>): Promise<void> {
-    const connection = getDatabaseConnection();
+    const generalConnection = getGeneralDatabaseConnection();
     const sql = `
       INSERT INTO UsuariosExternos (Username, EMail, PasswordHash, CreatedAt, UpdatedAt)
       VALUES ('${user.Username}', '${user.EMail}', '${user.PasswordHash}', GETDATE(), GETDATE())
     `;
-    await connection.query(sql);
+    await generalConnection.query(sql);
   }
 
   static async update(id: number, user: Partial<Omit<UsuariosExternosAttributes, 'Id' | 'CreatedAt' | 'UpdatedAt'>>): Promise<void> {
-    const connection = getDatabaseConnection();
+    const generalConnection = getGeneralDatabaseConnection();
     const updates = Object.entries(user).map(([key, value]) => `${key} = '${value}'`).join(', ');
     const sql = `UPDATE UsuariosExternos SET ${updates}, UpdatedAt = GETDATE() WHERE Id = ${id}`;
-    await connection.query(sql);
+    await generalConnection.query(sql);
   }
 
   static async delete(id: number): Promise<void> {
-    const connection = getDatabaseConnection();
+    const generalConnection = getGeneralDatabaseConnection();
     const sql = `UPDATE UsuariosExternos SET DeletedAt = GETDATE() WHERE Id = ${id}`;
-    await connection.query(sql);
+    await generalConnection.query(sql);
   }
 }

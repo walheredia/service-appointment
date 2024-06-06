@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { jwtConfig } from '../../config';
+import UsuariosExternos from '../../models/UsuariosExternos';
 
 const hash = async (req: Request, res: Response) => {
   try {
@@ -31,8 +32,12 @@ const login = async (req: Request, res: Response) => {
   if(!username || !password){
     res.status(400).json({"error": "Please provide username and password parameters"})
   }
-  const hash = "$2b$10$0A.pwltNBldyFjrzQDrwR.movH5IVy2Z4b7D2Dii9DHrZFD41j9zG" //get hash from db
-  const passwordIsValid = await validatePassword(password, hash);
+  const usuario = await UsuariosExternos.findUserByUserName(username);
+  if(!usuario){
+    res.status(401).json({"error": "Credentials are not valid"})
+  }
+  const hash = usuario?.PasswordHash; //get hash from db
+  const passwordIsValid = await validatePassword(password, hash || '');
   if(passwordIsValid){
     const token = generateToken({username: username});
     const expiresInMs = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
@@ -40,7 +45,7 @@ const login = async (req: Request, res: Response) => {
   
     res.status(200).json({token, expiresIn});
   } else {
-    res.status(401).json({"error": "unauthorized"})
+    res.status(401).json({"error": "Credentials are not valid"})
   }
 };
 
