@@ -14,7 +14,7 @@ const hash = async (req: Request, res: Response) => {
       const hash = await createHash(password)
       return res.status(200).json({"data": hash})
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: 'An error has occurred.',
       detail: error
     });

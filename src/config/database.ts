@@ -3,13 +3,13 @@ import odbc from 'odbc';
 
 dotenv.config();
 
-const dsnGeneralName = process.env.dsnGeneralName;
-const uidGeneral = process.env.dsnGeneralUser;
-const pwdGeneral = process.env.dsnGeneralPass;
+const dsnGeneralName = process.env.dsnGeneralName || 'dsnGeneral';
+const uidGeneral = process.env.dsnGeneralUser || 'juan';
+const pwdGeneral = process.env.dsnGeneralPass || '5871';
 
-const dsnServicesName = process.env.dsnServicesName;
-const uidServices = process.env.dsnServicesUser;
-const pwdServices = process.env.dsnServicesPass;
+const dsnServicesName = process.env.dsnServicesName || 'dsnServicios';
+const uidServices = process.env.dsnServicesUser || 'juan';
+const pwdServices = process.env.dsnServicesPass || '5871';
 
 let generalConnection: odbc.Connection;
 let servicesConnection: odbc.Connection;

@@ -7,7 +7,7 @@ app.use(express.json());
 app.use('/', routes);
 
 app.use((req, res, next) => {
-  res.status(404).json({
+  return res.status(404).json({
     message: 'The given resource is not implemented.'
   });
 });
