@@ -29,7 +29,7 @@ export default class UsuariosExternos {
   
   static async findUserByUserName(username: string): Promise<UsuariosExternosAttributes | null> {
     const generalConnection = getGeneralDatabaseConnection();
-    const result = await generalConnection.query(`SELECT * FROM UsuariosExternos WHERE Username = ${username} and DeletedAt is null`) as UsuariosExternosAttributes[];
+    const result = await generalConnection.query(`SELECT * FROM UsuariosExternos WHERE Username = '${username}' and DeletedAt is null`) as UsuariosExternosAttributes[];
     if (result.length === 0) return null;
     const row = result[0];
     return {

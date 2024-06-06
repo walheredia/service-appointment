@@ -30,11 +30,11 @@ const createHash = async (password: string) => {
 const login = async (req: Request, res: Response) => {
   const { username, password } = req.body;
   if(!username || !password){
-    res.status(400).json({"error": "Please provide username and password parameters"})
+    return res.status(400).json({"error": "Please provide username and password parameters"})
   }
   const usuario = await UsuariosExternos.findUserByUserName(username);
   if(!usuario){
-    res.status(401).json({"error": "Credentials are not valid"})
+    return res.status(401).json({"error": "Credentials are not valid"})
   }
   const hash = usuario?.PasswordHash; //get hash from db
   const passwordIsValid = await validatePassword(password, hash || '');
@@ -43,9 +43,9 @@ const login = async (req: Request, res: Response) => {
     const expiresInMs = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
     const expiresIn = new Date(Date.now() + expiresInMs);
   
-    res.status(200).json({token, expiresIn});
+    return res.status(200).json({token, expiresIn});
   } else {
-    res.status(401).json({"error": "Credentials are not valid"})
+    return res.status(401).json({"error": "Credentials are not valid"})
   }
 };
 

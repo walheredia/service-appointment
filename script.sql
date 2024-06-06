@@ -2,7 +2,7 @@ CREATE TABLE [dbo].[UsuariosExternos](
     [Id] INT IDENTITY(1,1) NOT NULL,
     [Username] VARCHAR(30) NOT NULL UNIQUE,
     [EMail] VARCHAR(50) NULL UNIQUE,
-    [PasswordHash] VARCHAR(50) NULL,
+    [PasswordHash] VARCHAR(250) NULL,
     [CreatedAt] DATETIME NOT NULL DEFAULT GETDATE(),
     [UpdatedAt] DATETIME NOT NULL DEFAULT GETDATE(),
     [DeletedAt] DATETIME NULL
