@@ -12,7 +12,7 @@ async function main() {
 
     
     // Cierra la conexión 
-    await connection.close();
+    //await connection.close();
   } catch (error) {
     console.error('Error al conectar al DSN:', error);
   }

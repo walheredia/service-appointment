@@ -13,7 +13,6 @@ export async function connectToDatabase() {
   try {
     // Conectar utilizando el DSN, usuario y contraseña
     connection = await odbc.connect(`DSN=${dsnName};UID=${uid};PWD=${pwd}`);
-    
     console.log('Conexión exitosa al DSN:', dsnName);
     return connection;
   } catch (error) {
