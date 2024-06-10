@@ -2,7 +2,7 @@ interface RecordType {
     Name?: string;
 }
 
-interface Account {
+export interface Account {
     Name?: string;
     BillingStreet?: string;
     BillingCity?: string;
@@ -18,7 +18,7 @@ interface Asset {
     Sales_suffix_description?: string;
 }
 
-interface Requerimiento {
+export interface Requerimiento {
     AsesorTecnico?: string;
     TiempoCliente?: string;
     Sintoma?: string;
@@ -40,7 +40,7 @@ interface Requerimiento {
     Detalle?: string;
 }
 
-interface WorkOrder {
+export interface WorkOrder {
     WorkOrderId: string;
     AccountFirstName: string;
     AccountLastName: string;
