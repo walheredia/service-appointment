@@ -1,6 +1,10 @@
 import { Request, Response } from 'express';
 import { requestBodyAgendaSchema } from './agenda.schema';
 import { Account, Requerimiento, WorkOrder } from './agenda.types';
+import Agenda from '../../models/Agenda';
+import { mapToAgendaAttributes, mapToReclamosAttributes } from './agenda.utils';
+import Reclamos, { ReclamosAttributes } from '../../models/AgendaReclamos';
+import { connectToServicesDatabase, getServicesConnection } from '../../config/database';
 
 const agenda = async(req: Request, res: Response) => {
     const agendaSchema = req.body;
@@ -20,10 +24,35 @@ const agenda = async(req: Request, res: Response) => {
     }
 
     const mappedData = mapJsonToDatabase(agendaSchema);
+    const newAgendaAttributes = mapToAgendaAttributes(mappedData);
+
+    const mappedRequirementsData = mapJsonRequirementToDatabase(agendaSchema).Requerimientos
+    const newAgendaReclamosAttributes: ReclamosAttributes[] = [];
+    mappedRequirementsData.forEach((requirementData:ReclamosAttributes) => {
+        newAgendaReclamosAttributes.push(mapToReclamosAttributes(requirementData))
+    });
+
+    //const agenda = await Agenda.findByReference(56);
+    const servicesConnection = getServicesConnection();
+    await servicesConnection.query('BEGIN TRANSACTION');
+    let agenda:number;
+    try {
+        agenda = await Agenda.create(newAgendaAttributes)
+        for (const reclamo of newAgendaReclamosAttributes) {
+            await Reclamos.create(reclamo, agenda);
+        }
+        await servicesConnection.query('COMMIT');
+    } catch (error) {
+        await servicesConnection.query('ROLLBACK');
+        return res.status(500).json({
+            message: 'An error has occurred.',
+            detail: error
+        });
+    }
 
     return res.status(200).json({
-        "data": req.body,
-        "mappedData": mappedData
+        "agenda_id": agenda,
+        "message": "Agenda has been created successfuly"
     });
 };
 
@@ -32,7 +61,10 @@ const fieldMapping: { [key: string]: string } = {
     "AccountPersonEmail": "Servicios.dbo.Agenda.Email",
     "Modelo": "Servicios.dbo.Agenda.Modelo",
     "Kilometraje": "Servicios.dbo.Agenda.Km",
-    /*"Síntoma": "Servicios.dbo.AgendaReclamos.Reclamo",
+};
+
+const fieldMappingReclamos: { [key: string]: string } = {
+    "Sintoma": "Servicios.dbo.AgendaReclamos.Reclamo",
     "Tiempo": "Servicios.dbo.AgendaReclamos.TpoEstimado",
     "PruebaEstatica": "Servicios.dbo.AgendaReclamos.PruebaEstatica",
     "InformacionAdicional": "Servicios.dbo.AgendaReclamos.InfoAdicional",
@@ -45,7 +77,7 @@ const fieldMapping: { [key: string]: string } = {
     "LugarAuto": "Servicios.dbo.AgendaReclamos.ParteAuto",
     "ConfirmadaCliente": "Servicios.dbo.AgendaReclamos.ConfirmaCli",
     "Origen": "Servicios.dbo.AgendaReclamos.Origen",
-    "Tipo": "Servicios.dbo.AgendaReclamos.Tipo",*/
+    "Tipo": "Servicios.dbo.AgendaReclamos.Tipo"
 };
 
 function mapJsonToDatabase(json:any): { [key: string]: any } {
@@ -63,7 +95,7 @@ function mapJsonToDatabase(json:any): { [key: string]: any } {
     } else {
         mappedObject['Servicios.dbo.Agenda.ClienteEspera  '] = false; 
     }
-    
+
     const NombreContacto = workOrder.NombreContacto || '';
     const ApellidoContacto = workOrder.ApellidoContacto || '';
     const EmailContacto = workOrder.EmailContacto || '';
@@ -97,9 +129,6 @@ function mapJsonToDatabase(json:any): { [key: string]: any } {
         });
     }
 
-    // Agrega los campos que son complejos (fechas, contactos, etc.)
-    // Aquí puedes agregar lógica adicional para campos complejos
-
     // Extrae y formatea las fechas y horas
     if (workOrder.FechaHoraRecepcionVehiculo) {
         const { date: fechaEnt, time: horaEnt } = formatDateTime(workOrder.FechaHoraRecepcionVehiculo);
@@ -116,12 +145,41 @@ function mapJsonToDatabase(json:any): { [key: string]: any } {
     return mappedObject;
 }
 
+function mapJsonRequirementToDatabase(json: any): { [key: string]: any } {
+    const mappedObject: { [key: string]: any } = {};
+
+    // Mapea los campos del WorkOrder
+    const workOrder = json.WorkOrder;
+
+    // Inicializa un array para los requerimientos mapeados
+    const mappedRequerimientos: { [key: string]: any }[] = [];
+
+    // Mapea los requerimientos
+    if (workOrder.Requerimiento) {
+        workOrder.Requerimiento.forEach((requerimiento: any) => {
+            const mappedRequerimiento: { [key: string]: any } = {};
+            for (const key in fieldMappingReclamos) {
+                if (requerimiento.hasOwnProperty(key)) {
+                    mappedRequerimiento[fieldMappingReclamos[key]] = requerimiento[key];
+                }
+            }
+            mappedRequerimientos.push(mappedRequerimiento);
+        });
+    }
+
+    // Añade los requerimientos mapeados al objeto principal
+    mappedObject.Requerimientos = mappedRequerimientos;
+
+    return mappedObject;
+}
+
 function formatDateTime(dateTime: string): { date: string, time: string } {
     const dateObj = new Date(dateTime);
     const date = dateObj.toISOString().split('T')[0] + ' 00:00:00.000';
     const time = dateObj.toTimeString().split(' ')[0].substring(0, 5).replace(':', '.');
     return { date, time };
 }
+
 
 
 export default {

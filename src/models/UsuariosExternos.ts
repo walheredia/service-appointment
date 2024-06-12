@@ -1,4 +1,3 @@
-import odbc from 'odbc';
 import { getGeneralDatabaseConnection } from '../config/database';
 
 interface UsuariosExternosAttributes {
