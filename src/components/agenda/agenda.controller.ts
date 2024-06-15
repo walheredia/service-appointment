@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import { requestBodyAgendaSchema } from './agenda.schema';
+import { requestBodyAgendaSchema, requestDeleteBodyAgendaSchema, requestUpdateBodyAgendaSchema } from './agenda.schema';
 import { Account, Requerimiento, WorkOrder } from './agenda.types';
 import Agenda from '../../models/Agenda';
-import { mapToAgendaAttributes, mapToReclamosAttributes } from './agenda.utils';
+import { mapJsonRequirementToDatabase, mapJsonToDatabase, mapToAgendaAttributes, mapToReclamosAttributes } from './agenda.utils';
 import Reclamos, { ReclamosAttributes } from '../../models/AgendaReclamos';
-import { connectToServicesDatabase, getServicesConnection } from '../../config/database';
+import { getServicesConnection } from '../../config/database';
 
 const agenda = async(req: Request, res: Response) => {
     const agendaSchema = req.body;
@@ -20,7 +20,7 @@ const agenda = async(req: Request, res: Response) => {
     });
 
     if(!agendaIsValid){
-        return res.status(400).json(errors);
+        return res.status(400).json({errors});
     }
 
     const mappedData = mapJsonToDatabase(agendaSchema);
@@ -32,7 +32,6 @@ const agenda = async(req: Request, res: Response) => {
         newAgendaReclamosAttributes.push(mapToReclamosAttributes(requirementData))
     });
 
-    //const agenda = await Agenda.findByReference(56);
     const servicesConnection = getServicesConnection();
     await servicesConnection.query('BEGIN TRANSACTION');
     let agenda:number;
@@ -51,137 +50,98 @@ const agenda = async(req: Request, res: Response) => {
     }
 
     return res.status(200).json({
-        "agenda_id": agenda,
-        "message": "Agenda has been created successfuly"
+        "IdPreOrden": agenda,
+        "ResultadoProceso": "Turno creado correctamente"
     });
 };
 
-const fieldMapping: { [key: string]: string } = {
-    "AccountPersonMobilePhone": "Servicios.dbo.Agenda.Tel1",
-    "AccountPersonEmail": "Servicios.dbo.Agenda.Email",
-    "Modelo": "Servicios.dbo.Agenda.Modelo",
-    "Kilometraje": "Servicios.dbo.Agenda.Km",
-};
+const actualizaAgenda = async(req: Request, res: Response) => {
+    try {
+        const agendaSchema = req.body;
+        let errors;
+        
+        const agendaIsValid = await requestUpdateBodyAgendaSchema.validate(agendaSchema, { abortEarly: false })
+        .then(() => {
+            return true;
+        })
+        .catch((err) => {
+            console.error("Errores de validación:", err.errors);
+            errors = err.errors;
+            return false;
+        });
 
-const fieldMappingReclamos: { [key: string]: string } = {
-    "Sintoma": "Servicios.dbo.AgendaReclamos.Reclamo",
-    "Tiempo": "Servicios.dbo.AgendaReclamos.TpoEstimado",
-    "PruebaEstatica": "Servicios.dbo.AgendaReclamos.PruebaEstatica",
-    "InformacionAdicional": "Servicios.dbo.AgendaReclamos.InfoAdicional",
-    "UsoUnidad": "Servicios.dbo.AgendaReclamos.TipoUsoUnidad",
-    "Que": "Servicios.dbo.AgendaReclamos.Que",
-    "Cuando": "Servicios.dbo.AgendaReclamos.Cuando",
-    "Frecuencia": "Servicios.dbo.AgendaReclamos.Frecuencia",
-    "Condiciones": "Servicios.dbo.AgendaReclamos.Condiciones",
-    "TipoCamino": "Servicios.dbo.AgendaReclamos.TipoDeCamino",
-    "LugarAuto": "Servicios.dbo.AgendaReclamos.ParteAuto",
-    "ConfirmadaCliente": "Servicios.dbo.AgendaReclamos.ConfirmaCli",
-    "Origen": "Servicios.dbo.AgendaReclamos.Origen",
-    "Tipo": "Servicios.dbo.AgendaReclamos.Tipo"
-};
-
-function mapJsonToDatabase(json:any): { [key: string]: any } {
-    const mappedObject: { [key: string]: any } = {};
-
-    // Mapea los campos del WorkOrder
-    const workOrder = json.WorkOrder;
-
-    const firstName = workOrder.AccountFirstName || '';
-    const lastName = workOrder.AccountLastName || '';
-    mappedObject['Servicios.dbo.Agenda.Cliente'] = `${firstName} ${lastName}`.trim();
-
-    if(workOrder.EsperaElVehiculo == 'Si' || workOrder.ClienteSinCitaPrevia == 'true'){
-        mappedObject['Servicios.dbo.Agenda.ClienteEspera  '] = true;
-    } else {
-        mappedObject['Servicios.dbo.Agenda.ClienteEspera  '] = false; 
-    }
-
-    const NombreContacto = workOrder.NombreContacto || '';
-    const ApellidoContacto = workOrder.ApellidoContacto || '';
-    const EmailContacto = workOrder.EmailContacto || '';
-    const CelularContacto = workOrder.CelularContacto || '';
-    mappedObject['Servicios.dbo.Agenda.Contacto'] = `${NombreContacto} ${ApellidoContacto} ${EmailContacto} ${CelularContacto}`.trim();
-
-    for (const key in workOrder) {
-        if (fieldMapping[key]) {
-            mappedObject[fieldMapping[key]] = workOrder[key as keyof WorkOrder];
+        if(!agendaIsValid){
+            return res.status(400).json({errors});
         }
-    }
 
-    // Mapea los campos dentro de Account si existen
-    if (workOrder.Account) {
-        const account = workOrder.Account;
-        for (const key in account) {
-            if (fieldMapping[key]) {
-                mappedObject[fieldMapping[key]] = account[key as keyof Account];
-            }
-        }
-    }
+        let agenda = await Agenda.findByReference(agendaSchema.WorkOrder.IdPreOrden);
+        const mappedData = mapJsonToDatabase(agendaSchema);
+        const newAgendaAttributes = mapToAgendaAttributes(mappedData);
+        await Agenda.update(agendaSchema.WorkOrder.IdPreOrden, newAgendaAttributes)
 
-    // Mapea los requerimientos
-    if (workOrder.Requerimiento) {
-        workOrder.Requerimiento.forEach((requerimiento:any, index:any) => {
-            for (const key in requerimiento) {
-                if (fieldMapping[key]) {
-                    mappedObject[`${fieldMapping[key]}_${index}`] = requerimiento[key as keyof Requerimiento];
-                }
-            }
+        return res.status(200).json({
+            "IdPreOrden": agenda?.Referencia,
+            "ResultadoProceso": "El Turno fue reagendado correctamente"
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            message: 'An error has occurred.',
+            detail: error
         });
     }
-
-    // Extrae y formatea las fechas y horas
-    if (workOrder.FechaHoraRecepcionVehiculo) {
-        const { date: fechaEnt, time: horaEnt } = formatDateTime(workOrder.FechaHoraRecepcionVehiculo);
-        mappedObject['Servicios.dbo.Agenda.FechaEnt'] = fechaEnt;
-        mappedObject['Servicios.dbo.Agenda.HoraEnt'] = horaEnt;
-    }
-
-    if (workOrder.FechaHoraEntregaVehiculo) {
-        const { date: fechaSal, time: horaSal } = formatDateTime(workOrder.FechaHoraEntregaVehiculo);
-        mappedObject['Servicios.dbo.Agenda.FechaSal'] = fechaSal;
-        mappedObject['Servicios.dbo.Agenda.HoraSal'] = horaSal;
-    }
-
-    return mappedObject;
 }
 
-function mapJsonRequirementToDatabase(json: any): { [key: string]: any } {
-    const mappedObject: { [key: string]: any } = {};
+const eliminaAgenda = async(req: Request, res: Response) => {
+    try {
+        const agendaSchema = req.body;
+        let errors;
+        
+        const agendaIsValid = await requestDeleteBodyAgendaSchema.validate(agendaSchema, { abortEarly: false })
+        .then(() => {
+            return true;
+        })
+        .catch((err) => {
+            console.error("Errores de validación:", err.errors);
+            errors = err.errors;
+            return false;
+        });
 
-    // Mapea los campos del WorkOrder
-    const workOrder = json.WorkOrder;
+        if(!agendaIsValid){
+            return res.status(400).json({errors});
+        }
 
-    // Inicializa un array para los requerimientos mapeados
-    const mappedRequerimientos: { [key: string]: any }[] = [];
+        const servicesConnection = getServicesConnection();
+        await servicesConnection.query('BEGIN TRANSACTION');
+        let agenda:number = agendaSchema.WorkOrder.IdPreOrden;
+        try {
+            await Reclamos.deleteAllByReference(agenda);
+            await Agenda.delete(agenda)
+            await servicesConnection.query('COMMIT');
+        } catch (error) {
+            await servicesConnection.query('ROLLBACK');
+            return res.status(500).json({
+                message: 'An error has occurred.',
+                detail: error
+            });
+        }
 
-    // Mapea los requerimientos
-    if (workOrder.Requerimiento) {
-        workOrder.Requerimiento.forEach((requerimiento: any) => {
-            const mappedRequerimiento: { [key: string]: any } = {};
-            for (const key in fieldMappingReclamos) {
-                if (requerimiento.hasOwnProperty(key)) {
-                    mappedRequerimiento[fieldMappingReclamos[key]] = requerimiento[key];
-                }
-            }
-            mappedRequerimientos.push(mappedRequerimiento);
+        return res.status(200).json({
+            "IdPreOrden": agenda,
+            "ResultadoProceso": "El Turno fue anulado correctamente"
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            message: 'An error has occurred.',
+            detail: error
         });
     }
-
-    // Añade los requerimientos mapeados al objeto principal
-    mappedObject.Requerimientos = mappedRequerimientos;
-
-    return mappedObject;
 }
-
-function formatDateTime(dateTime: string): { date: string, time: string } {
-    const dateObj = new Date(dateTime);
-    const date = dateObj.toISOString().split('T')[0] + ' 00:00:00.000';
-    const time = dateObj.toTimeString().split(' ')[0].substring(0, 5).replace(':', '.');
-    return { date, time };
-}
-
 
 
 export default {
   agenda,
+  actualizaAgenda,
+  eliminaAgenda
 };

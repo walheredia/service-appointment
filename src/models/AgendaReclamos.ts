@@ -124,9 +124,9 @@ export default class Reclamos {
     await servicesConnection.query(sql);
   }
 
-  static async delete(reference: number, item: number): Promise<void> {
+  static async deleteAllByReference(reference: number): Promise<void> {
     const servicesConnection = getServicesConnection();
-    const sql = `DELETE FROM AgendaReclamos WHERE Referencia = ${reference} AND Item = ${item}`;
+    const sql = `DELETE FROM AgendaReclamos WHERE Referencia = ${reference}`;
     await servicesConnection.query(sql);
   }
 }

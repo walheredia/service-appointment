@@ -6,5 +6,7 @@ const router = Router();
 //router.use(authMiddleware);
 
 router.post('/', agendaController.agenda);
+router.patch('/', agendaController.actualizaAgenda);
+router.delete('/', agendaController.eliminaAgenda);
 
 export default router;

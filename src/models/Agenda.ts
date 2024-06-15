@@ -1,3 +1,4 @@
+import { formatDate, convertToGMT3 } from '../components/agenda/agenda.utils';
 import { getServicesConnection } from '../config/database';
 
 export interface AgendaAttributes {
@@ -196,21 +197,23 @@ export interface AgendaAttributes {
         `) as any[];
         const newReferencia = maxRef[0].NewReferencia;
         const sql = "INSERT INTO Agenda (Referencia, FechaProc, Recepcionista, NroVehiculo, Modelo, Km, Combustible, CodCli, Cliente, Tel1, Tel2, Email, Contacto, Cargo, FPago, RemisTaxi, RecepDinamica, CedulaVerde, ManualServ, FechaEnt, HoraEnt, FechaSal, HoraSal, Horas, ImpGlobalPresu, MObra, Repuestos, CodCampProm, Observaciones, ReconfTurno, ConfRepuestos, NroCompIntPr, ClienteEspera, ReparRepetida, Campaña, ACampo, Revision, UltNroCompIntOR, ComentariosPreOr, CodTipCompPreOr, AvisoEvento, EnvioSMS, PeritajeFirmado, PeritajeEnviado, FechaRecep, FechaEnvioTerminal, Demorado, Usuario, UsuarioM, Fecha, FechaM, MovCodTaller, MovDia, MovHora, MovUsuario, MovFecha" +
-        `) VALUES ('${newReferencia}', '${agenda.FechaProc?.toISOString()}', '${agenda.Recepcionista}', ${agenda.NroVehiculo}, '${agenda.Modelo}', ${agenda.Km}, ${agenda.Combustible}, ${agenda.CodCli}, '${agenda.Cliente}', '${agenda.Tel1}', '${agenda.Tel2}', '${agenda.Email}', '${agenda.Contacto}', '${agenda.Cargo}', '${agenda.FPago}', ${agenda.RemisTaxi ? 1 : 0}, ${agenda.RecepDinamica ? 1 : 0}, ${agenda.CedulaVerde ? 1 : 0}, ${agenda.ManualServ ? 1 : 0}, '${agenda.FechaEnt?.toISOString()}', ${agenda.HoraEnt}, '${agenda.FechaSal?.toISOString()}', ${agenda.HoraSal}, ${agenda.Horas}, ${agenda.ImpGlobalPresu ? 1 : 0}, ${agenda.MObra}, ${agenda.Repuestos}, ${agenda.CodCampProm}, '${agenda.Observaciones}', ${agenda.ReconfTurno ? 1 : 0}, ${agenda.ConfRepuestos ? 1 : 0}, ${agenda.NroCompIntPr}, ${agenda.ClienteEspera ? 1 : 0}, ${agenda.ReparRepetida}, ${agenda.Campaña ? 1 : 0}, ${agenda.ACampo ? 1 : 0}, ${agenda.Revision ? 1 : 0}, ${agenda.UltNroCompIntOR}, '${agenda.ComentariosPreOr}', '${agenda.CodTipCompPreOr}', ${agenda.AvisoEvento ? 1 : 0}, ${agenda.EnvioSMS}, ${agenda.PeritajeFirmado ? 1 : 0}, ${agenda.PeritajeEnviado ? 1 : 0}, '${agenda.FechaRecep?.toISOString()}', '${agenda.FechaEnvioTerminal?.toISOString()}', ${agenda.Demorado ? 1 : 0}, '${agenda.Usuario}', '${agenda.UsuarioM}', '${agenda.Fecha?.toISOString()}', '${agenda.FechaM?.toISOString()}', '${agenda.MovCodTaller}', '${agenda.MovDia?.toISOString()}', ${agenda.MovHora}, '${agenda.MovUsuario}', '${agenda.MovFecha?.toISOString()}');`;
+        `) VALUES ('${newReferencia}', '${formatDate(agenda.FechaProc?.toISOString())}', /*recepcionista*/' ', ${agenda.NroVehiculo}, '${agenda.Modelo}', ${agenda.Km}, ${agenda.Combustible}, ${agenda.CodCli}, '${agenda.Cliente}', '${agenda.Tel1}', /*Tel2*/null, '${agenda.Email}', '${agenda.Contacto}', /*Cargo*/' ', '${agenda.FPago}', ${agenda.RemisTaxi ? 1 : 0}, ${agenda.RecepDinamica ? 1 : 0}, ${agenda.CedulaVerde ? 1 : 0}, ${agenda.ManualServ ? 1 : 0}, '${formatDate(agenda.FechaEnt?.toISOString())}', ${agenda.HoraEnt}, '${formatDate(agenda.FechaSal?.toISOString())}', ${agenda.HoraSal}, ${agenda.Horas}, ${agenda.ImpGlobalPresu ? 1 : 0}, ${agenda.MObra}, ${agenda.Repuestos}, ${agenda.CodCampProm}, /*observaciones*/null, ${agenda.ReconfTurno ? 1 : 0}, ${agenda.ConfRepuestos ? 1 : 0}, /*NroCompIntPr*/null, ${agenda.ClienteEspera ? 1 : 0}, ${agenda.ReparRepetida}, ${agenda.Campaña ? 1 : 0}, ${agenda.ACampo ? 1 : 0}, ${agenda.Revision ? 1 : 0}, /*UltNroCompIntOR*/null, /*ComentariosPreOr*/null, /*CodTipCompPreOr*/null, ${agenda.AvisoEvento ? 1 : 0}, ${agenda.EnvioSMS}, ${agenda.PeritajeFirmado ? 1 : 0}, ${agenda.PeritajeEnviado ? 1 : 0}, /*FechaRecep*/null, /*FechaEnvioTerminal*/null, ${agenda.Demorado ? 1 : 0}, '${agenda.Usuario}', /*UsuarioM*/null, '${convertToGMT3(agenda.Fecha?.toISOString())}', /*FechaM*/null, /*MovCodTaller*/null, /*MovDia*/null, /*MovHora*/null, /*MovUsuario*/null, /*MovFecha*/null);`;
         await servicesConnection.query(sql);
         return newReferencia;
     }
+
+    
   
-    static async update(reference: number, agenda: Partial<Omit<AgendaAttributes, 'Referencia'>>): Promise<void> {
-      const servicesConnection = getServicesConnection();
-      const updates = Object.entries(agenda).map(([key, value]) => `${key} = '${value}'`).join(', ');
-      const sql = `UPDATE Agenda SET ${updates} WHERE Referencia = ${reference}`;
-      await servicesConnection.query(sql);
+    static async update(reference: number, agenda: AgendaAttributes): Promise<number> {
+        const servicesConnection = getServicesConnection();
+        const sql = `UPDATE Agenda SET FechaEnt = '${agenda.FechaEnt?.toISOString()}', HoraEnt = '${agenda.HoraEnt}', FechaSal = '${agenda.FechaSal?.toISOString()}', HoraSal = '${agenda.HoraSal}' WHERE Referencia = ${reference}`;
+        await servicesConnection.query(sql);
+        return reference
     }
   
     static async delete(reference: number): Promise<void> {
       const servicesConnection = getServicesConnection();
-      const sql = `UPDATE Agenda SET DeletedAt = GETDATE() WHERE Referencia = ${reference}`;
+      const sql = `DELETE FROM Agenda WHERE Referencia = ${reference}`;
       await servicesConnection.query(sql);
     }
   }

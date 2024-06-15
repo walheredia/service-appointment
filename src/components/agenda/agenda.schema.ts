@@ -84,3 +84,24 @@ export const requestBodyAgendaSchema = yup.object().shape({
     IdPeticion: yup.string().required(),
     WorkOrder: workOrderSchema.required()
 });
+
+
+const workOrderUpdateSchema = yup.object().shape({
+    IdPreOrden: yup.string().required(),
+    FechaHoraEntregaVehiculo: yup.date().required(),
+    FechaHoraRecepcionVehiculo: yup.date().required()
+});
+
+export const requestUpdateBodyAgendaSchema = yup.object().shape({
+    IdPeticion: yup.string(),
+    WorkOrder: workOrderUpdateSchema.required()
+});
+
+const workOrderDeleteSchema = yup.object().shape({
+    IdPreOrden: yup.string().required(),
+});
+
+export const requestDeleteBodyAgendaSchema = yup.object().shape({
+    IdPeticion: yup.string(),
+    WorkOrder: workOrderDeleteSchema.required()
+});
