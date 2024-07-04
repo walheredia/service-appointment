@@ -73,7 +73,7 @@ export const mapToReclamosAttributes = (mappedData: MappedData): ReclamosAttribu
         Referencia: parseInt(mappedData["Servicios.dbo.AgendaReclamos.Referencia"]),
         Item: parseInt(mappedData["Servicios.dbo.AgendaReclamos.Item"]),
         Reclamo: mappedData["Servicios.dbo.AgendaReclamos.Reclamo"] || '',
-        Origen: mappedData["Servicios.dbo.AgendaReclamos.Origen"] || '',
+        Origen: parseOrigen(mappedData["Servicios.dbo.AgendaReclamos.Origen"]),
         Tipo: parseInt(mappedData["Servicios.dbo.AgendaReclamos.Tipo"] || '0'),
         Categoria: parseInt(mappedData["Servicios.dbo.AgendaReclamos.Categoria"] || '0'),
         ComTecnico: mappedData["Servicios.dbo.AgendaReclamos.ComTecnico"] || '',
@@ -92,7 +92,7 @@ export const mapToReclamosAttributes = (mappedData: MappedData): ReclamosAttribu
         ConfirmaAsesor: mappedData["Servicios.dbo.AgendaReclamos.ConfirmaAsesor"] === '1',
         ConfirmaTiempo: mappedData["Servicios.dbo.AgendaReclamos.ConfirmaTiempo"] === '1',
         DescribirSintoma: mappedData["Servicios.dbo.AgendaReclamos.DescribirSintoma"] || '',
-        TpoEstimado: parseFloat(mappedData["Servicios.dbo.AgendaReclamos.TpoEstimado"] || '0'),
+        TpoEstimado: '0',//parseFloat(mappedData["Servicios.dbo.AgendaReclamos.TpoEstimado"] || '0'),
         CorrespondeTD: mappedData["Servicios.dbo.AgendaReclamos.CorrespondeTD"] || '',
         RutaTD: mappedData["Servicios.dbo.AgendaReclamos.RutaTD"] || '',
         PruebaEstatica: mappedData["Servicios.dbo.AgendaReclamos.PruebaEstatica"] || '',
@@ -126,6 +126,16 @@ const fieldMappingReclamos: { [key: string]: string } = {
     "Tipo": "Servicios.dbo.AgendaReclamos.Tipo"
 };
 
+function parseOrigen(origen?:string){
+    if(origen == 'Cliente'){
+        return 'C'
+    }
+    if(origen == 'Concesionario'){
+        return 'I'
+    }
+    return ' '
+}
+
 export function mapJsonToDatabase(json:any): { [key: string]: any } {
     const mappedObject: { [key: string]: any } = {};
 
@@ -136,7 +146,7 @@ export function mapJsonToDatabase(json:any): { [key: string]: any } {
     const lastName = workOrder.AccountLastName || '';
     mappedObject['Servicios.dbo.Agenda.Cliente'] = `${firstName} ${lastName}`.trim();
 
-    if(workOrder.EsperaElVehiculo == 'Si' || workOrder.ClienteSinCitaPrevia == 'true'){
+    if(workOrder.EsperaElVehiculo == 'Si'/* || workOrder.ClienteSinCitaPrevia == 'true'*/){
         mappedObject['Servicios.dbo.Agenda.ClienteEspera  '] = true;
     } else {
         mappedObject['Servicios.dbo.Agenda.ClienteEspera  '] = false; 

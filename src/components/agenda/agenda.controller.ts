@@ -49,6 +49,11 @@ const agenda = async(req: AuthRequest, res: Response) => {
         for (const reclamo of newAgendaReclamosAttributes) {
             await Reclamos.create(reclamo, agenda);
         }
+
+        //si el turno viene dado de baja, se da de baja en agenda dia
+        if(agendaSchema.WorkOrder.Cancelado) {
+            await AgendaDias.deleteAgendaDia(agenda);
+        }
         await servicesConnection.query('COMMIT');
     } catch (error) {
         await servicesConnection.query('ROLLBACK');

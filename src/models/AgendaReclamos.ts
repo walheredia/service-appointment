@@ -23,7 +23,7 @@ export interface ReclamosAttributes {
   ConfirmaAsesor: boolean;
   ConfirmaTiempo: boolean;
   DescribirSintoma?: string;
-  TpoEstimado: number;
+  TpoEstimado: string;
   CorrespondeTD?: string;
   RutaTD?: string;
   PruebaEstatica?: string;
@@ -109,7 +109,7 @@ export default class Reclamos {
   static async create(reclamo: ReclamosAttributes, referencia:number): Promise<void> {
     const servicesConnection = getServicesConnection();
     const sql = 'INSERT INTO AgendaReclamos (Referencia, Item, Reclamo, Origen, Tipo, Categoria, ComTecnico, CausaRaiz, InstTrabajo, CtrlCalidad, CodOperario, ComCalidad, Que, Cuando, Frecuencia, Condiciones, TipoDeCamino, ParteAuto, ConfirmaCli, ConfirmaAsesor, ConfirmaTiempo, DescribirSintoma, TpoEstimado, CorrespondeTD, RutaTD, PruebaEstatica, Box, InfoAdicional, TipoUsoUnidad)'
-        + `VALUES (${referencia},(SELECT ISNULL(MAX(Item), 0) + 1 AS NewItem FROM AgendaReclamos WHERE Referencia = ${referencia}),'${reclamo.Reclamo}',null,null,${reclamo.Categoria},'${reclamo.ComTecnico}',`
+        + `VALUES (${referencia},(SELECT ISNULL(MAX(Item), 0) + 1 AS NewItem FROM AgendaReclamos WHERE Referencia = ${referencia}),'${reclamo.Reclamo}','${reclamo.Origen}',null,${reclamo.Categoria},'${reclamo.ComTecnico}',`
         + `'${reclamo.CausaRaiz}','${reclamo.InstTrabajo}',${reclamo.CtrlCalidad ? 1 : 0},'${reclamo.CodOperario}','${reclamo.ComCalidad}',`
         + `'${reclamo.Que}','${reclamo.Cuando}','${reclamo.Frecuencia}','${reclamo.Condiciones}','${reclamo.TipoDeCamino}','${reclamo.ParteAuto}',`
         + `${reclamo.ConfirmaCli ? 1 : 0},${reclamo.ConfirmaAsesor ? 1 : 0},${reclamo.ConfirmaTiempo ? 1 : 0},'${reclamo.DescribirSintoma}',`
