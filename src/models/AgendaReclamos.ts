@@ -30,6 +30,7 @@ export interface ReclamosAttributes {
   Box?: string;
   InfoAdicional?: string;
   TipoUsoUnidad?: string;
+  Detalle?: string;
 }
 
 export default class Reclamos {

@@ -1,5 +1,5 @@
 import { formatDate, convertToGMT3 } from '../components/agenda/agenda.utils';
-import { getServicesConnection } from '../config/database';
+import { getGeneralDatabaseConnection, getServicesConnection } from '../config/database';
 
 export interface AgendaAttributes {
     Referencia: number;
@@ -192,18 +192,17 @@ export interface AgendaAttributes {
   
     static async create(agenda: AgendaAttributes, user:string): Promise<number> {
         const servicesConnection = getServicesConnection();
+        const modelo = await this.obtenerDescModelo(agenda.Modelo);
         const maxRef = await servicesConnection.query(`
         SELECT ISNULL(MAX(Referencia), 0) + 1 AS NewReferencia FROM Agenda
         `) as any[];
         const newReferencia = maxRef[0].NewReferencia;
         const sql = "INSERT INTO Agenda (Referencia, FechaProc, Recepcionista, NroVehiculo, Modelo, Km, Combustible, CodCli, Cliente, Tel1, Tel2, Email, Contacto, Cargo, FPago, RemisTaxi, RecepDinamica, CedulaVerde, ManualServ, FechaEnt, HoraEnt, FechaSal, HoraSal, Horas, ImpGlobalPresu, MObra, Repuestos, CodCampProm, Observaciones, ReconfTurno, ConfRepuestos, NroCompIntPr, ClienteEspera, ReparRepetida, Campaña, ACampo, Revision, UltNroCompIntOR, ComentariosPreOr, CodTipCompPreOr, AvisoEvento, EnvioSMS, PeritajeFirmado, PeritajeEnviado, FechaRecep, FechaEnvioTerminal, Demorado, Usuario, UsuarioM, Fecha, FechaM, MovCodTaller, MovDia, MovHora, MovUsuario, MovFecha" +
-        `) VALUES ('${newReferencia}', '${formatDate(agenda.FechaProc?.toISOString())}', /*recepcionista*/' ', ${agenda.NroVehiculo}, '${agenda.Modelo}', ${agenda.Km}, ${agenda.Combustible}, ${agenda.CodCli}, '${agenda.Cliente}', '${agenda.Tel1 ?? ' '}',/*Tel2*/' ', '${agenda.Email}', '${agenda.Contacto}', /*Cargo*/' ', '${agenda.FPago}', ${agenda.RemisTaxi ? 1 : 0}, ${agenda.RecepDinamica ? 1 : 0}, ${agenda.CedulaVerde ? 1 : 0}, ${agenda.ManualServ ? 1 : 0}, '${formatDate(agenda.FechaEnt?.toISOString())}', ${agenda.HoraEnt}, '${formatDate(agenda.FechaSal?.toISOString())}', ${agenda.HoraSal}, ${agenda.Horas}, ${agenda.ImpGlobalPresu ? 1 : 0}, ${agenda.MObra}, ${agenda.Repuestos}, ${agenda.CodCampProm}, /*observaciones*/null, ${agenda.ReconfTurno ? 1 : 0}, ${agenda.ConfRepuestos ? 1 : 0}, /*NroCompIntPr*/null, ${agenda.ClienteEspera ? 1 : 0}, ${agenda.ReparRepetida}, ${agenda.Campaña ? 1 : 0}, ${agenda.ACampo ? 1 : 0}, ${agenda.Revision ? 1 : 0}, /*UltNroCompIntOR*/null, /*ComentariosPreOr*/null, /*CodTipCompPreOr*/null, ${agenda.AvisoEvento ? 1 : 0}, ${agenda.EnvioSMS}, ${agenda.PeritajeFirmado ? 1 : 0}, ${agenda.PeritajeEnviado ? 1 : 0}, /*FechaRecep*/null, /*FechaEnvioTerminal*/null, ${agenda.Demorado ? 1 : 0}, '${user}', /*UsuarioM*/null, '${convertToGMT3(agenda.Fecha?.toISOString())}', /*FechaM*/null, /*MovCodTaller*/null, /*MovDia*/null, /*MovHora*/null, /*MovUsuario*/null, /*MovFecha*/null);`;
+        `) VALUES ('${newReferencia}', '${formatDate(agenda.FechaProc?.toISOString())}', /*recepcionista*/'T_WEB', ${agenda.NroVehiculo}, '${modelo}', ${agenda.Km}, ${agenda.Combustible}, ${agenda.CodCli}, '${agenda.Cliente}', '${agenda.Tel1 ?? ' '}',/*Tel2*/' ', '${agenda.Email}', '${agenda.Contacto}', /*Cargo*/'C', '${agenda.FPago}', ${agenda.RemisTaxi ? 1 : 0}, ${agenda.RecepDinamica ? 1 : 0}, ${agenda.CedulaVerde ? 1 : 0}, ${agenda.ManualServ ? 1 : 0}, '${formatDate(agenda.FechaEnt?.toISOString())}', ${agenda.HoraEnt}, '${formatDate(agenda.FechaSal?.toISOString())}', ${agenda.HoraSal}, ${agenda.Horas}, ${agenda.ImpGlobalPresu ? 1 : 0}, ${agenda.MObra}, ${agenda.Repuestos}, ${agenda.CodCampProm}, /*observaciones*/null, ${agenda.ReconfTurno ? 1 : 0}, ${agenda.ConfRepuestos ? 1 : 0}, /*NroCompIntPr*/null, ${agenda.ClienteEspera ? 1 : 0}, ${agenda.ReparRepetida}, ${agenda.Campaña ? 1 : 0}, ${agenda.ACampo ? 1 : 0}, ${agenda.Revision ? 1 : 0}, /*UltNroCompIntOR*/null, /*ComentariosPreOr*/null, /*CodTipCompPreOr*/null, ${agenda.AvisoEvento ? 1 : 0}, ${agenda.EnvioSMS}, ${agenda.PeritajeFirmado ? 1 : 0}, ${agenda.PeritajeEnviado ? 1 : 0}, /*FechaRecep*/null, /*FechaEnvioTerminal*/null, ${agenda.Demorado ? 1 : 0}, '${user}', /*UsuarioM*/null, '${convertToGMT3(agenda.Fecha?.toISOString())}', /*FechaM*/null, /*MovCodTaller*/null, /*MovDia*/null, /*MovHora*/null, /*MovUsuario*/null, /*MovFecha*/null);`;
         
         await servicesConnection.query(sql);
         return newReferencia;
     }
-
-    
   
     static async update(reference: number, agenda: AgendaAttributes, user: string): Promise<number> {
         const servicesConnection = getServicesConnection();
@@ -217,4 +216,18 @@ export interface AgendaAttributes {
       const sql = `DELETE FROM Agenda WHERE Referencia = ${reference}`;
       await servicesConnection.query(sql);
     }
+
+    static async obtenerDescModelo(cod?: string): Promise<string> {
+      const generalConnection = getGeneralDatabaseConnection();
+      const query = `SELECT DesMod from General.dbo.Modelos where CodAlt = '${cod}' or CodAlt2 = '${cod}'`
+      const result = await generalConnection.query(query) as IMod[];
+      if (result.length === 0) return '-';
+      const row = result[0];
+      return row.DesMod
+    }
+
+  }
+
+  interface IMod {
+    DesMod: string    
   }

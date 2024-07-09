@@ -219,6 +219,12 @@ export function mapJsonRequirementToDatabase(json: any): { [key: string]: any } 
                     mappedRequerimiento[fieldMappingReclamos[key]] = requerimiento[key];
                 }
             }
+            if(requerimiento.Detalle){
+                mappedRequerimiento['Servicios.dbo.AgendaReclamos.Reclamo'] = mappedRequerimiento['Servicios.dbo.AgendaReclamos.Reclamo']
+                + ' ('
+                + requerimiento.Detalle
+                + ')';
+            }
             mappedRequerimientos.push(mappedRequerimiento);
         });
     }
