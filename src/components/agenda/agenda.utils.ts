@@ -74,8 +74,8 @@ export const mapToReclamosAttributes = (mappedData: MappedData): ReclamosAttribu
         Item: parseInt(mappedData["Servicios.dbo.AgendaReclamos.Item"]),
         Reclamo: mappedData["Servicios.dbo.AgendaReclamos.Reclamo"] || '',
         Origen: parseOrigen(mappedData["Servicios.dbo.AgendaReclamos.Origen"]),
-        Tipo: parseInt(mappedData["Servicios.dbo.AgendaReclamos.Tipo"] || '0'),
-        Categoria: parseInt(mappedData["Servicios.dbo.AgendaReclamos.Categoria"] || '0'),
+        Tipo: mappedData["Servicios.dbo.AgendaReclamos.Tipo"] || '0',
+        Categoria: mappedData["Servicios.dbo.AgendaReclamos.Categoria"],
         ComTecnico: mappedData["Servicios.dbo.AgendaReclamos.ComTecnico"] || '',
         CausaRaiz: mappedData["Servicios.dbo.AgendaReclamos.CausaRaiz"] || '',
         InstTrabajo: mappedData["Servicios.dbo.AgendaReclamos.InstTrabajo"] || '',
@@ -92,7 +92,7 @@ export const mapToReclamosAttributes = (mappedData: MappedData): ReclamosAttribu
         ConfirmaAsesor: mappedData["Servicios.dbo.AgendaReclamos.ConfirmaAsesor"] === '1',
         ConfirmaTiempo: mappedData["Servicios.dbo.AgendaReclamos.ConfirmaTiempo"] === '1',
         DescribirSintoma: mappedData["Servicios.dbo.AgendaReclamos.DescribirSintoma"] || '',
-        TpoEstimado: '0',//parseFloat(mappedData["Servicios.dbo.AgendaReclamos.TpoEstimado"] || '0'),
+        TpoEstimado: mappedData["Servicios.dbo.AgendaReclamos.TpoEstimado"] || '0',
         CorrespondeTD: mappedData["Servicios.dbo.AgendaReclamos.CorrespondeTD"] || '',
         RutaTD: mappedData["Servicios.dbo.AgendaReclamos.RutaTD"] || '',
         PruebaEstatica: mappedData["Servicios.dbo.AgendaReclamos.PruebaEstatica"] || '',
@@ -224,6 +224,9 @@ export function mapJsonRequirementToDatabase(json: any): { [key: string]: any } 
                 + ' ('
                 + requerimiento.Detalle
                 + ')';
+            }
+            if(requerimiento.Seccion){
+                mappedRequerimiento['Servicios.dbo.AgendaReclamos.Categoria'] = requerimiento.Seccion;
             }
             mappedRequerimientos.push(mappedRequerimiento);
         });

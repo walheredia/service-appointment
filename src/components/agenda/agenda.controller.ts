@@ -47,6 +47,10 @@ const agenda = async(req: AuthRequest, res: Response) => {
         const agendaDia = await AgendaDias.create(agendaDiaAttributes);
 
         for (const reclamo of newAgendaReclamosAttributes) {
+            reclamo.TpoEstimado = calcularTiempoEstimado(reclamo.TpoEstimado)
+            reclamo.Tipo = obtenerTipo(reclamo.Tipo)
+            reclamo.Categoria = obtenerCategoria(reclamo.Categoria);
+            
             await Reclamos.create(reclamo, agenda);
         }
 
@@ -68,6 +72,63 @@ const agenda = async(req: AuthRequest, res: Response) => {
         "ResultadoProceso": "Turno creado correctamente"
     });
 };
+
+function calcularTiempoEstimado(tpoEstimado: string): string{
+    switch (tpoEstimado) {
+        case "15'":
+        case "15":
+            return "15";
+        case "30'":
+        case "30":
+            return "30";
+        case "1hs":
+            return "60";
+        case "1:30hs":
+            return "90";
+        default:
+            return "0";
+    }
+}
+
+function obtenerTipo(tipo?: string | number): number {
+    if (typeof tipo === 'string') {
+        const tipoLower = tipo.toLowerCase();
+        switch (tipoLower) {
+            case 'mantenimiento':
+                return 1;
+            case 'reparación gral.':
+            case 'reparación gral':
+            case 'reparación':
+                return 2;
+            case 'garantía':
+                return 3;
+            case 'campaña de serv.':
+            case 'campaña de serv':
+            case 'campaña de servicio':
+                return 4;
+            default:
+                return 0;
+        }
+    }
+    return 0;
+}
+
+function obtenerCategoria(categoria?: string | number): number {
+    if (typeof categoria === 'string') {
+        const categoriaLower = categoria?.toLowerCase();
+        switch (categoriaLower) {
+            case 'falla expresada por el cliente':
+            case 'falla expresada por el cliente.':
+                return 1;
+            case 'requerimiento/trabajo a realizar':
+            case 'requerimiento/trabajo a realizar.':
+                return 2;
+            default:
+                return 0;
+        }
+    }
+    return 0;
+}
 
 const actualizaAgenda = async(req: AuthRequest, res: Response) => {
     const servicesConnection = getServicesConnection();
