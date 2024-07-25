@@ -7,6 +7,8 @@ import Reclamos, { ReclamosAttributes } from '../../models/AgendaReclamos';
 import { getServicesConnection } from '../../config/database';
 import AgendaDias, { AgendaDiasAttributes } from '../../models/AgendaDias';
 import { AuthRequest } from '../../middlewares/auth';
+import { createVehicle, findVehicle } from '../vehiculo/vehiculo.services';
+import { findOrCreateClient } from '../cliente/cliente.services';
 
 const agenda = async(req: AuthRequest, res: Response) => {
     const agendaSchema = req.body;
@@ -38,6 +40,30 @@ const agenda = async(req: AuthRequest, res: Response) => {
     await servicesConnection.query('BEGIN TRANSACTION');
     let agenda:number;
     try {
+        let NroVehiculo = 0;
+        let CodCli = 0;
+
+        let vehicleInfo = null;
+        if(agendaSchema.WorkOrder.VIN){
+            vehicleInfo = await findVehicle('NroChasis', agendaSchema.WorkOrder.VIN);
+        }
+        if(!vehicleInfo && agendaSchema.WorkOrder.Patente){
+            vehicleInfo = await findVehicle('Patente', agendaSchema.WorkOrder.Patente);
+        }
+        if(vehicleInfo?.CodTitular){
+            CodCli = vehicleInfo.CodTitular
+        }
+        if(vehicleInfo?.NroVehiculo){
+            NroVehiculo = vehicleInfo.NroVehiculo
+        }
+
+        if(!vehicleInfo){
+            CodCli = await findOrCreateClient(agendaSchema.WorkOrder,  req.user ?? '');
+            NroVehiculo = await createVehicle(agendaSchema.WorkOrder, CodCli,  req.user ?? '' );
+        }
+        
+        newAgendaAttributes.NroVehiculo = NroVehiculo;
+        newAgendaAttributes.CodCli = CodCli;
         agenda = await Agenda.create(newAgendaAttributes, req.user ?? '')
         const agendaDiaAttributes = {} as AgendaDiasAttributes;
         agendaDiaAttributes.CodTaller = '1';
