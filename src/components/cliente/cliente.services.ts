@@ -30,7 +30,6 @@ interface IClient {
 
 export const findOrCreateClient = async (params: WorkOrder, usuario:string):Promise<number> => {
   try {
-    //return 2;
     let CodCli = 0;
     let ClientData = null;
     if(params.AccountNumeroDeDocumento){
