@@ -2,6 +2,7 @@ import { error } from "console";
 import { getGeneralDatabaseConnection, getServicesConnection } from "../../config/database";
 import { WorkOrder } from "../agenda/agenda.types";
 import { convertToGMT3 } from "../agenda/agenda.utils";
+import logger from "../../logger";
 
 export const findVehicle = async(filterType:string, filterValue:string):Promise<IVehicle|null> => {
   const servicesConnection = getServicesConnection();
@@ -119,7 +120,7 @@ export const createVehicle = async (params: WorkOrder, codTitular: number, usuar
     await servicesConnection.query(sqlCreate);
     return NewNroVehiculo;
   } catch (error) {
-    console.log(error)
+    logger.error(error)
     const err = error as Error;
     throw new Error(err.message);
   }

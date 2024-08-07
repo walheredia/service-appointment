@@ -3,7 +3,7 @@ import odbc from 'odbc';
 
 dotenv.config();
 
-const dsnGeneralName = process.env.dsnGeneralName || 'dsnGeneral';
+const dsnGeneralName = process.env.dsnGeneralName || 'dsnGeneralSrvPrueba';
 const uidGeneral = process.env.dsnGeneralUser || 'juan';
 const pwdGeneral = process.env.dsnGeneralPass || '5871';
 

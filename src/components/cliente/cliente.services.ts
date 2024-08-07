@@ -1,7 +1,9 @@
+import winston from "winston/lib/winston/config";
 import { getGeneralDatabaseConnection, getServicesConnection } from "../../config/database";
 import { AgendaAttributes } from "../../models/Agenda";
 import { WorkOrder } from "../agenda/agenda.types";
 import { convertToGMT3 } from "../agenda/agenda.utils";
+import logger from "../../logger";
 
 const findClient = async(filterValue:string):Promise<IClient|null> => {
   const generalConnection = getGeneralDatabaseConnection();
@@ -81,7 +83,7 @@ export const findOrCreateClient = async (params: WorkOrder, usuario:string):Prom
                     `NULL, ` + // FecAgruCli
                     `NULL, ` + // ObservaCli
                     `CASE WHEN '${params.Account.CUILCUIT}' IS NOT NULL THEN 'RI' ELSE 'CF' END, ` + // CodCondIVA
-                    `CASE WHEN '${params.AccountTipoDeDocumento}' = 'DNI' THEN 96 WHEN '${params.AccountTipoDeDocumento}' = 'CUIT' THEN 80 ELSE NULL END, ` + // CodDoc
+                    `CASE WHEN '${params.AccountTipoDeDocumento}' = 'DNI' THEN 96 WHEN '${params.AccountTipoDeDocumento}' = 'CUIT' THEN 80 ELSE 86 END, ` + // CodDoc
                     `'${params.AccountNumeroDeDocumento}', ` + // NroDoc
                     `0, ` + // Reventa
                     `0.0, ` + // LimiteCredito
@@ -127,7 +129,7 @@ export const findOrCreateClient = async (params: WorkOrder, usuario:string):Prom
                 `NULL, ` + // FecAgruCli
                 `NULL, ` + // ObservaCli
                 `CASE WHEN '${params?.Account?.CUILCUIT ?? ''}' IS NOT NULL THEN 'RI' ELSE 'CF' END, ` + // CodCondIVA
-                `CASE WHEN '${params.AccountTipoDeDocumento}' = 'DNI' THEN 96 WHEN '${params.AccountTipoDeDocumento}' = 'CUIT' THEN 80 ELSE NULL END, ` + // CodDoc
+                `CASE WHEN '${params.AccountTipoDeDocumento}' = 'DNI' THEN 96 WHEN '${params.AccountTipoDeDocumento}' = 'CUIT' THEN 80 ELSE 86 END, ` + // CodDoc
                 `'${params.AccountNumeroDeDocumento}', ` + // NroDoc
                 `0, ` + // Reventa
                 `0.0, ` + // LimiteCredito
@@ -148,9 +150,11 @@ export const findOrCreateClient = async (params: WorkOrder, usuario:string):Prom
         CodCli = NewCodCli
     }
     return CodCli;
-  } catch (error) {
-    console.log(error)
-    const err = error as Error;
-    throw new Error(err.message);
+  } catch (error:any) {
+    const errorDetails = JSON.stringify(error, Object.getOwnPropertyNames(error));
+    logger.error('An error occurred:'
+    );
+    logger.error(errorDetails)
+    throw new Error(error.message);
   }
 }

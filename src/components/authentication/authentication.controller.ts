@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { jwtConfig } from '../../config';
 import UsuariosExternos from '../../models/UsuariosExternos';
+import logger from '../../logger';
 
 const hash = async (req: Request, res: Response) => {
   try {
@@ -14,9 +15,11 @@ const hash = async (req: Request, res: Response) => {
       const hash = await createHash(password)
       return res.status(200).json({"data": hash})
   } catch (error) {
+    const err = error as Error;
+    logger.error('hash error:', { error });
     return res.status(500).json({
       message: 'An error has occurred.',
-      detail: error
+      detail: err.message
     });
   }
 }

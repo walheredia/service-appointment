@@ -9,6 +9,7 @@ import AgendaDias, { AgendaDiasAttributes } from '../../models/AgendaDias';
 import { AuthRequest } from '../../middlewares/auth';
 import { createVehicle, findVehicle } from '../vehiculo/vehiculo.services';
 import { findOrCreateClient } from '../cliente/cliente.services';
+import logger from '../../logger';
 
 const agenda = async(req: AuthRequest, res: Response) => {
     const agendaSchema = req.body;
@@ -19,6 +20,7 @@ const agenda = async(req: AuthRequest, res: Response) => {
     })
     .catch((err) => {
         console.error("Errores de validación:", err.errors);
+        logger.error('Errores de validación:', { err });
         errors = err.errors;
         return false;
     });
@@ -85,8 +87,12 @@ const agenda = async(req: AuthRequest, res: Response) => {
             await AgendaDias.deleteAgendaDia(agenda);
         }
         await servicesConnection.query('COMMIT');
-    } catch (error) {
+    } catch (error:any) {
         await servicesConnection.query('ROLLBACK');
+        const errorDetails = JSON.stringify(error, Object.getOwnPropertyNames(error));
+        logger.error('An error occurred:'
+        );
+        logger.error(errorDetails)
         return res.status(500).json({
             message: 'An error has occurred.',
             detail: error
@@ -202,6 +208,7 @@ const actualizaAgenda = async(req: AuthRequest, res: Response) => {
         });
     } catch (error) {
         await servicesConnection.query('ROLLBACK');
+        logger.error('actualizaAgenda error:', { error });
         return res.status(500).json({
             message: 'An error has occurred.',
             detail: error
@@ -247,6 +254,7 @@ const eliminaAgenda = async(req: Request, res: Response) => {
             await servicesConnection.query('COMMIT');
         } catch (error) {
             await servicesConnection.query('ROLLBACK');
+            logger.error('eliminaAgenda error:', { error });
             return res.status(500).json({
                 message: 'An error has occurred.',
                 detail: error
@@ -259,6 +267,7 @@ const eliminaAgenda = async(req: Request, res: Response) => {
         });
 
     } catch (error) {
+        logger.error('eliminaAgenda error:', { error });
         return res.status(500).json({
             message: 'An error has occurred.',
             detail: error
